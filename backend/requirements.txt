@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+python-multipart
+aiofiles
+aiosqlite
+whisper
+torch
+transformers
+python-docx
+reportlab

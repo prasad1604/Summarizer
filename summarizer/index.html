@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meeting Minutes Generator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="container">
+                <div class="header__content">
+                    <h1 class="header__title">Meeting Minutes Generator</h1>
+                    <p class="header__subtitle">Transform your meeting recordings into structured minutes</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main">
+            <div class="container">
+                <div class="main__layout">
+                    <!-- Settings Sidebar -->
+                    <aside class="sidebar" id="sidebar">
+                        <div class="sidebar__header">
+                            <h3>Settings</h3>
+                            <button class="btn--outline btn--sm" id="toggleSidebar">
+                                <span>×</span>
+                            </button>
+                        </div>
+                        <div class="sidebar__content">
+                            <div class="form-group">
+                                <label class="form-label">Summary Length</label>
+                                <div class="radio-group">
+                                    <label class="radio-item">
+                                        <input type="radio" name="summaryLength" value="Short">
+                                        <span>Short</span>
+                                    </label>
+                                    <label class="radio-item">
+                                        <input type="radio" name="summaryLength" value="Medium" checked>
+                                        <span>Medium</span>
+                                    </label>
+                                    <label class="radio-item">
+                                        <input type="radio" name="summaryLength" value="Detailed">
+                                        <span>Detailed</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <input type="checkbox" id="includeTimestamps" checked>
+                                    Include Timestamps
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <input type="checkbox" id="speakerIdentification" checked>
+                                    Speaker Identification
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Language</label>
+                                <select class="form-control" id="languageSelect">
+                                    <option value="English">English</option>
+                                    <option value="Spanish">Spanish</option>
+                                    <option value="French">French</option>
+                                    <option value="German">German</option>
+                                    <option value="Italian">Italian</option>
+                                    <option value="Portuguese">Portuguese</option>
+                                </select>
+                            </div>
+                        </div>
+                    </aside>
+
+                    <!-- Main Content Area -->
+                    <div class="content">
+                        <!-- Upload Section -->
+                        <section class="upload-section" id="uploadSection">
+                            <div class="card">
+                                <div class="card__body">
+                                    <div class="upload-area" id="uploadArea">
+                                        <div class="upload-area__icon">
+                                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                                <polyline points="7,10 12,15 17,10"/>
+                                                <line x1="12" y1="15" x2="12" y2="3"/>
+                                            </svg>
+                                        </div>
+                                        <h3 class="upload-area__title">Drop audio files here</h3>
+                                        <p class="upload-area__subtitle">or click to browse</p>
+                                        <input type="file" id="fileInput" multiple accept=".mp3,.wav,.mp4,.m4a,.flac" class="upload-area__input">
+                                    </div>
+                                    <div class="upload-info">
+                                        <p>Supported formats: MP3, WAV, MP4, M4A, FLAC</p>
+                                        <p>Maximum file size: 100MB per file</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Selected Files -->
+                            <div class="selected-files" id="selectedFiles"></div>
+
+                            <!-- Process Button -->
+                            <div class="process-section" id="processSection" style="display: none;">
+                                <button class="btn btn--primary btn--lg btn--full-width" id="processBtn">
+                                    Process Files
+                                </button>
+                            </div>
+
+                            <!-- Demo Section -->
+                            <div class="demo-section">
+                                <h3>Try with Sample Data</h3>
+                                <div class="demo-buttons">
+                                    <button class="btn btn--outline" data-demo="meeting1">Project Planning Meeting</button>
+                                    <button class="btn btn--outline" data-demo="meeting2">Team Standup</button>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Processing Section -->
+                        <section class="processing-section hidden" id="processingSection">
+                            <div class="card">
+                                <div class="card__body">
+                                    <h3>Processing Files</h3>
+                                    <div class="processing-list" id="processingList"></div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Results Section -->
+                        <section class="results-section hidden" id="resultsSection">
+                            <div class="results-header">
+                                <h2>Meeting Minutes</h2>
+                                <div class="results-actions">
+                                    <button class="btn btn--outline btn--sm" id="settingsToggle">Settings</button>
+                                    <button class="btn btn--secondary btn--sm" id="startOverBtn">Start Over</button>
+                                </div>
+                            </div>
+                            <div class="results-content">
+                                <!-- Transcript Panel -->
+                                <div class="transcript-panel">
+                                    <div class="card">
+                                        <div class="card__header">
+                                            <h3>Transcript</h3>
+                                            <div class="transcript-info">
+                                                <span id="wordCount">0 words</span>
+                                            </div>
+                                        </div>
+                                        <div class="card__body">
+                                            <div class="transcript-content" id="transcriptContent"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Minutes Panel -->
+                                <div class="minutes-panel">
+                                    <div class="minutes-sections">
+                                        <!-- Summary -->
+                                        <div class="card">
+                                            <div class="card__header">
+                                                <h3>Summary</h3>
+                                            </div>
+                                            <div class="card__body">
+                                                <p id="summaryContent"></p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Action Items -->
+                                        <div class="card">
+                                            <div class="card__header">
+                                                <h3>Action Items</h3>
+                                            </div>
+                                            <div class="card__body">
+                                                <ul id="actionItemsList"></ul>
+                                            </div>
+                                        </div>
+
+                                        <!-- Decisions -->
+                                        <div class="card">
+                                            <div class="card__header">
+                                                <h3>Decisions Made</h3>
+                                            </div>
+                                            <div class="card__body">
+                                                <ul id="decisionsList"></ul>
+                                            </div>
+                                        </div>
+
+                                        <!-- Participants -->
+                                        <div class="card">
+                                            <div class="card__header">
+                                                <h3>Participants</h3>
+                                            </div>
+                                            <div class="card__body">
+                                                <ul id="participantsList"></ul>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Export Section -->
+                                    <div class="export-section">
+                                        <div class="card">
+                                            <div class="card__header">
+                                                <h3>Export & Share</h3>
+                                            </div>
+                                            <div class="card__body">
+                                                <div class="export-buttons">
+                                                    <button class="btn btn--outline btn--sm export-btn" data-format="pdf">
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                                            <polyline points="14,2 14,8 20,8"/>
+                                                        </svg>
+                                                        PDF
+                                                    </button>
+                                                    <button class="btn btn--outline btn--sm export-btn" data-format="docx">
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                                            <polyline points="14,2 14,8 20,8"/>
+                                                        </svg>
+                                                        DOCX
+                                                    </button>
+                                                    <button class="btn btn--outline btn--sm export-btn" data-format="txt">
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                                            <polyline points="14,2 14,8 20,8"/>
+                                                        </svg>
+                                                        TXT
+                                                    </button>
+                                                    <button class="btn btn--outline btn--sm export-btn" data-format="markdown">
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                                            <polyline points="14,2 14,8 20,8"/>
+                                                        </svg>
+                                                        MD
+                                                    </button>
+                                                </div>
+                                                <div class="export-actions">
+                                                    <button class="btn btn--secondary btn--sm" id="copyToClipboard">Copy to Clipboard</button>
+                                                    <button class="btn btn--secondary btn--sm" id="shareEmail">Share via Email</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
