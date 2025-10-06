@@ -4,6 +4,8 @@ from fastapi.responses import FileResponse
 import uuid
 import os
 from datetime import datetime
+from contextlib import asynccontextmanager
+import uvicorn
 
 from models.database import init_db
 from models.meeting import Meeting, MeetingStatus
@@ -12,7 +14,17 @@ from services.summarization_service import SummarizationService
 from services.export_service import ExportService
 from utils.file_utils import validate_audio_file, save_uploaded_file
 
-app = FastAPI(title="Meeting Minutes Generator API")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup code
+    await init_db()
+    yield
+    # Optional shutdown code below (if any)
+
+
+app = FastAPI(title="Meeting Minutes Generator API", lifespan=lifespan)
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -22,16 +34,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 audio_service = AudioService()
 summarization_service = SummarizationService()
 export_service = ExportService()
 
+
 os.makedirs("uploads", exist_ok=True)
 os.makedirs("exports", exist_ok=True)
 
-@app.on_event("startup")
-async def startup_event():
-    await init_db()
 
 @app.post("/api/upload")
 async def upload_file(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
@@ -50,6 +61,7 @@ async def upload_file(background_tasks: BackgroundTasks, file: UploadFile = File
     background_tasks.add_task(process_meeting, job_id)
     return {"job_id": job_id, "filename": file.filename, "status": "uploaded"}
 
+
 @app.get("/api/status/{job_id}")
 async def get_status(job_id: str):
     meeting = await Meeting.get(job_id)
@@ -64,6 +76,7 @@ async def get_status(job_id: str):
         "completed_at": str(meeting.completed_at) if meeting.completed_at else None,
         "error": meeting.error,
     }
+
 
 @app.get("/api/summary/{job_id}")
 async def get_summary(job_id: str):
@@ -82,6 +95,7 @@ async def get_summary(job_id: str):
         "duration": meeting.duration,
     }
 
+
 @app.get("/api/export/{job_id}")
 async def export_meeting(job_id: str, format: str = "txt"):
     meeting = await Meeting.get(job_id)
@@ -91,6 +105,7 @@ async def export_meeting(job_id: str, format: str = "txt"):
         raise HTTPException(status_code=400, detail="Processing not completed")
     export_path = await export_service.export_meeting(meeting, format)
     return FileResponse(export_path, filename=f"meeting-minutes-{job_id[:8]}.{format}")
+
 
 async def process_meeting(job_id: str):
     meeting = await Meeting.get(job_id)
@@ -127,3 +142,7 @@ async def process_meeting(job_id: str):
         meeting.status = MeetingStatus.FAILED
         meeting.error = str(e)
         await meeting.save()
+
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
