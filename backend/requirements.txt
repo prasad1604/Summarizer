@@ -1,10 +1,10 @@
 fastapi
 uvicorn
 python-multipart
-aiofiles
-aiosqlite
-whisper
+openai-whisper
 torch
+aiosqlite
 transformers
 python-docx
 reportlab
+
